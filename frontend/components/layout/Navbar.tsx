@@ -1,15 +1,17 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { UserRole } from "@/types";
 import {
+  Activity,
+  Search,
+  Bell,
+  ChevronDown,
+  UserCheck,
+  Check,
   ShieldAlert,
   Sparkles,
-  UserCheck,
-  Activity,
-  Layers,
-  CheckCircle2,
-  AlertTriangle,
+  Command,
 } from "lucide-react";
 
 interface NavbarProps {
@@ -17,9 +19,8 @@ interface NavbarProps {
   onRoleChange: (role: UserRole) => void;
   selectedCaseId: string;
   onCaseChange: (caseId: string) => void;
-  caseCount: number;
-  activeSafetyEventsCount: number;
-  isAuditChainValid: boolean;
+  onSearch?: (query: string) => void;
+  onOpenNewCaseModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -27,9 +28,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   onRoleChange,
   selectedCaseId,
   onCaseChange,
-  activeSafetyEventsCount,
-  isAuditChainValid,
 }) => {
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const roles: UserRole[] = [
     "Treating Doctor",
     "Appointed Doctor",
@@ -38,109 +41,164 @@ export const Navbar: React.FC<NavbarProps> = ({
     "Admin",
   ];
 
-  const casePresets = [
-    { id: "CASE-001", label: "Case 1: Stable Consensus (CAD)" },
-    { id: "CASE-002", label: "Case 2: High Ethical Conflict (ACS)" },
-    { id: "CASE-003", label: "Case 3: Unstable Decision (AAA)" },
-    { id: "CASE-004", label: "Case 4: Severe Disagreement (Oncology)" },
-    { id: "CASE-005", label: "Case 5: Missing Data Gate (Sepsis)" },
-    { id: "CASE-006", label: "Case 6: Human Override (Hematoma)" },
+  const notifications = [
+    {
+      id: "n1",
+      title: "CASE-002 Safety Gate Active",
+      time: "10m ago",
+      urgent: true,
+      desc: "Multidisciplinary review requested due to high-risk LAD stenosis.",
+    },
+    {
+      id: "n2",
+      title: "New Review Submitted",
+      time: "45m ago",
+      urgent: false,
+      desc: "Dr. Rostova submitted independent assessment for CASE-001.",
+    },
+    {
+      id: "n3",
+      title: "Consensus Updated",
+      time: "2h ago",
+      urgent: false,
+      desc: "Consensus threshold reached 68% for CASE-002.",
+    },
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-[#090d16]/90 backdrop-blur-md px-4 lg:px-6 py-3">
-      <div className="flex flex-wrap items-center justify-between gap-4 max-w-7xl mx-auto">
-        {/* Brand */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500/20 via-indigo-500/20 to-emerald-500/20 border border-sky-500/30 glow-cyan">
-            <Activity className="w-5 h-5 text-sky-400" />
-            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
-            </span>
+    <header className="sticky top-0 z-40 bg-white border-b border-slate-200/80 px-4 lg:px-8 py-3 transition-colors">
+      <div className="flex items-center justify-between gap-4 max-w-[1400px] mx-auto">
+        {/* Left: Brand Identity */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 shadow-xs">
+            <Activity className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-300 via-indigo-200 to-white">
+              <span className="text-lg font-bold tracking-tight text-slate-900">
                 EthicSync
               </span>
-              <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-sky-950/80 border border-sky-800/60 text-sky-300">
-                Governance Portal
-              </span>
             </div>
-            <p className="text-[11px] text-slate-400 hidden sm:block">
-              Explainable Clinical Decision Support & Consensus Platform
+            <p className="text-[11px] text-slate-500 font-normal leading-none hidden sm:block">
+              Clinical Decisions. Ethical. Transparent. Together.
             </p>
           </div>
         </div>
 
-        {/* Global Controls & Statuses */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Active Synthetic Demo Preset Selector */}
-          <div className="flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 rounded-lg p-1">
-            <Layers className="w-3.5 h-3.5 text-sky-400 ml-2" />
-            <select
-              value={selectedCaseId}
-              onChange={(e) => onCaseChange(e.target.value)}
-              className="bg-transparent text-xs font-medium text-slate-200 focus:outline-none cursor-pointer py-1 pr-2"
-              title="Select Demonstration Case Scenario"
+        {/* Center: Global Search */}
+        <div className="flex-1 max-w-md mx-4 hidden md:block">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search cases, patients, or keywords..."
+              className="w-full bg-[#F3F6FA] hover:bg-[#EEF2F7] focus:bg-white text-xs text-slate-800 placeholder-slate-400 pl-9 pr-12 py-2 rounded-xl border border-transparent focus:border-blue-500 focus:outline-none transition-all"
+            />
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[10px] text-slate-400 font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 shadow-2xs pointer-events-none">
+              <Command className="w-2.5 h-2.5" />
+              <span>K</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Notifications & User Profile */}
+        <div className="flex items-center gap-3">
+          {/* Notifications Button */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setNotificationsOpen(!notificationsOpen);
+                setRoleDropdownOpen(false);
+              }}
+              className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors relative"
+              title="Notifications"
             >
-              {casePresets.map((preset) => (
-                <option
-                  key={preset.id}
-                  value={preset.id}
-                  className="bg-slate-900 text-slate-200 text-xs"
-                >
-                  {preset.label}
-                </option>
-              ))}
-            </select>
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
+            </button>
+
+            {/* Notifications Dropdown */}
+            {notificationsOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl border border-slate-200 shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-900">Notifications</span>
+                  <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                    3 New
+                  </span>
+                </div>
+                <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
+                  {notifications.map((n) => (
+                    <div key={n.id} className="p-3 hover:bg-slate-50 transition-colors cursor-pointer text-xs">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <span className={`font-semibold ${n.urgent ? "text-red-700" : "text-slate-800"}`}>
+                          {n.title}
+                        </span>
+                        <span className="text-[10px] text-slate-400 shrink-0">{n.time}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-snug">{n.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Role Switcher */}
-          <div className="flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 rounded-lg p-1">
-            <UserCheck className="w-3.5 h-3.5 text-emerald-400 ml-2" />
-            <select
-              value={currentRole}
-              onChange={(e) => onRoleChange(e.target.value as UserRole)}
-              className="bg-transparent text-xs font-medium text-slate-200 focus:outline-none cursor-pointer py-1 pr-2"
-              title="Switch Perspective / RBAC View"
+          {/* User Profile Pill & Role Switcher */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setRoleDropdownOpen(!roleDropdownOpen);
+                setNotificationsOpen(false);
+              }}
+              className="flex items-center gap-2.5 pl-1.5 pr-3 py-1 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all text-left"
             >
-              {roles.map((r) => (
-                <option
-                  key={r}
-                  value={r}
-                  className="bg-slate-900 text-slate-200 text-xs"
-                >
-                  View as: {r}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-semibold text-xs flex items-center justify-center">
+                DP
+              </div>
+              <div className="hidden sm:block leading-tight">
+                <div className="text-xs font-semibold text-slate-900">Dr. Priya</div>
+                <div className="text-[10px] text-slate-500">{currentRole}</div>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-0.5" />
+            </button>
 
-          {/* Safety Gate Alert Indicator */}
-          {activeSafetyEventsCount > 0 ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs font-medium animate-pulse">
-              <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
-              <span>{activeSafetyEventsCount} Safety Gate Active</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-emerald-300 text-xs font-medium">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Safety Gated: Clear</span>
-            </div>
-          )}
-
-          {/* Audit Chain Status Badge */}
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border ${
-              isAuditChainValid
-                ? "bg-sky-950/40 border-sky-800/50 text-sky-300"
-                : "bg-red-950/70 border-red-700 text-red-300"
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-            <span>SHA-256 Ledger Verified</span>
+            {/* Role Switcher Menu */}
+            {roleDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-4 py-2 border-b border-slate-100">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Switch Perspective
+                  </p>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    View the decision support platform as:
+                  </p>
+                </div>
+                <div className="py-1">
+                  {roles.map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => {
+                        onRoleChange(r);
+                        setRoleDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-4 py-2 text-xs font-medium transition-colors ${
+                        currentRole === r
+                          ? "bg-blue-50 text-blue-700 font-semibold"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <UserCheck className={`w-3.5 h-3.5 ${currentRole === r ? "text-blue-600" : "text-slate-400"}`} />
+                        <span>{r}</span>
+                      </div>
+                      {currentRole === r && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

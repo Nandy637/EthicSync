@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { CaseData } from "@/types";
 import {
   BrainCircuit,
@@ -8,10 +8,12 @@ import {
   Scale,
   ShieldCheck,
   ExternalLink,
-  Cpu,
-  Hash,
+  Info,
+  CheckCircle2,
+  AlertTriangle,
+  FileText,
+  Sparkles,
 } from "lucide-react";
-import { truncateHash } from "@/lib/utils";
 
 interface AIInsightsViewProps {
   currentCase: CaseData;
@@ -21,152 +23,179 @@ export const AIInsightsView: React.FC<AIInsightsViewProps> = ({
   currentCase,
 }) => {
   const { aiAnalysis } = currentCase;
+  const [selectedCitation, setSelectedCitation] = useState<string | null>(null);
 
   return (
-    <div className="space-y-6">
-      {/* AI Boundary & Philosophy Disclaimer */}
-      <div className="glass-card rounded-2xl p-4 border border-indigo-900/60 bg-indigo-950/20 flex items-start gap-3.5">
-        <div className="p-2 rounded-xl bg-indigo-950/80 border border-indigo-800 text-indigo-400 shrink-0 mt-0.5">
-          <ShieldCheck className="w-5 h-5 text-indigo-400" />
+    <div className="space-y-6 max-w-[1400px] mx-auto">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          AI & Evidence Extraction
+        </h1>
+        <p className="text-xs text-slate-500 mt-1">
+          Automated literature retrieval, guideline grounding, and structured explanation.
+        </p>
+      </div>
+
+      {/* 1. TOP DISCLAIMER BANNER */}
+      <div className="p-5 rounded-2xl bg-purple-50/70 border border-purple-200/80 shadow-2xs flex items-start gap-4">
+        <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 mt-0.5">
+          <BrainCircuit className="w-5 h-5" />
         </div>
-        <div>
-          <h3 className="text-sm font-semibold text-indigo-200">
-            AI-Supported Clinical Interpretation — Explanatory Only
-          </h3>
-          <p className="text-xs text-indigo-300/80 mt-1 leading-relaxed">
-            The AI subsystem functions strictly as an evidence extraction and
-            explainability layer. It identifies clinical factors, retrieves
-            grounded guidelines via vector RAG, and flags candidate ethical
-            tensions. **It does not prescribe treatment, nor does it select the
-            winning clinical option.**
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold text-purple-950">
+              AI-ASSISTED CLINICAL INTERPRETATION
+            </h3>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-200/60 text-purple-800">
+              Explanatory Layer
+            </span>
+          </div>
+          <p className="text-xs text-purple-900 leading-relaxed font-medium">
+            AI provides evidence extraction, summarization, and explanation. It does not prescribe treatment or make the final decision.
+          </p>
+          <p className="text-[11px] text-purple-700/80">
+            Model: {aiAnalysis.modelName} • Verification Hash: {aiAnalysis.outputHash.slice(0, 16)}...
           </p>
         </div>
       </div>
 
-      {/* Pipeline A: Summary & Extracted Factors */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="glass-card rounded-xl p-5 border border-slate-800 space-y-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-sky-400 uppercase tracking-wider">
-            <BrainCircuit className="w-4 h-4 text-sky-400" />
-            <span>Executive Clinical Synthesis</span>
-          </div>
-          <p className="text-xs text-slate-200 leading-relaxed">
-            {aiAnalysis.summary}
-          </p>
+      {/* 2. CLINICAL SYNTHESIS */}
+      <div className="clinical-card p-6 md:p-8 space-y-6 bg-white">
+        <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
+          <Sparkles className="w-4 h-4 text-purple-600" />
+          <h2 className="text-base font-bold text-slate-900 tracking-tight">
+            Clinical Synthesis
+          </h2>
+        </div>
 
-          <div className="pt-3 border-t border-slate-800/80 space-y-1.5">
-            <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">
-              Extracted Clinical Decision Drivers
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Key Findings */}
+          <div className="space-y-2 p-4 rounded-xl bg-slate-50/70 border border-slate-200/70">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
+              Key Findings
             </span>
-            <ul className="space-y-1 pl-1">
+            <p className="text-xs text-slate-700 leading-relaxed">
+              {aiAnalysis.summary}
+            </p>
+          </div>
+
+          {/* Relevant Decision Factors */}
+          <div className="space-y-2 p-4 rounded-xl bg-slate-50/70 border border-slate-200/70">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
+              Relevant Decision Factors
+            </span>
+            <ul className="space-y-1.5 text-xs text-slate-700">
               {aiAnalysis.clinicalFactors.map((factor, idx) => (
-                <li
-                  key={idx}
-                  className="text-xs text-slate-300 flex items-start gap-2"
-                >
-                  <span className="text-sky-400 mt-0.5">•</span>
+                <li key={idx} className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0" />
                   <span>{factor}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Missing Information */}
+          <div className="space-y-2 p-4 rounded-xl bg-slate-50/70 border border-slate-200/70">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
+              Missing Information Impact
+            </span>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              {currentCase.clinicalInfo.missingInformation.length > 0
+                ? `Identified ${currentCase.clinicalInfo.missingInformation.length} omissions. Mathematical model adjusted to conservative risk bounds.`
+                : "No omissions detected in baseline clinical profile. High confidence in factor mapping."}
+            </p>
+          </div>
+
+          {/* Potential Ethical Tensions */}
+          <div className="space-y-2 p-4 rounded-xl bg-purple-50/40 border border-purple-200/60">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-900 block">
+              Potential Ethical Tensions
+            </span>
+            <ul className="space-y-1.5 text-xs text-purple-950">
+              {aiAnalysis.candidateEthicalIssues.map((issue, idx) => (
+                <li key={idx} className="flex items-start gap-2">
+                  <Scale className="w-3.5 h-3.5 text-purple-600 mt-0.5 shrink-0" />
+                  <span>{issue}</span>
                 </li>
               ))}
             </ul>
           </div>
         </div>
 
-        {/* Candidate Ethical Issues */}
-        <div className="glass-card rounded-xl p-5 border border-slate-800 space-y-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider">
-            <Scale className="w-4 h-4 text-amber-400" />
-            <span>Candidate Ethical Tensions Detected</span>
-          </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Tensions surfaced for review by the multidisciplinary committee:
-          </p>
-          <div className="space-y-2">
-            {aiAnalysis.candidateEthicalIssues.map((issue, idx) => (
-              <div
-                key={idx}
-                className="p-3 rounded-lg bg-amber-950/20 border border-amber-800/40 text-xs text-amber-200"
-              >
-                {issue}
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-2">
-            <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider mb-1">
-              Qualitative Trade-off Overview
-            </span>
-            <p className="text-xs text-slate-300 italic">
-              "{aiAnalysis.tradeOffExplanation}"
-            </p>
+        {/* Trade-Off Natural Language Explanation */}
+        <div className="pt-4 border-t border-slate-100">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
+            AI Trade-Off Explanation
+          </span>
+          <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-100 text-xs text-slate-700 leading-relaxed">
+            {aiAnalysis.tradeOffExplanation}
           </div>
         </div>
       </div>
 
-      {/* Pipeline B: Grounded Knowledge Base (RAG Citations) */}
-      <div className="glass-card rounded-xl p-5 border border-slate-800 space-y-3">
+      {/* 3. GROUNDED EVIDENCE & RAG CITATIONS */}
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-            <BookOpen className="w-4 h-4 text-emerald-400" />
-            <span>Grounded Clinical Evidence Citations (pgvector RAG)</span>
+          <div>
+            <h2 className="text-base font-bold text-slate-900 tracking-tight">
+              Grounded Evidence & Guidelines
+            </h2>
+            <p className="text-xs text-slate-500">
+              Directly cited from peer-reviewed literature and authorized clinical guidelines.
+            </p>
           </div>
-          <span className="text-[11px] text-slate-400 font-mono">
-            {aiAnalysis.retrievedSources.length} Verified Sources Retrieved
+          <span className="text-xs text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-lg font-semibold">
+            {aiAnalysis.retrievedSources.length} Grounded Citations
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {aiAnalysis.retrievedSources.map((source) => (
+          {aiAnalysis.retrievedSources.map((cite) => (
             <div
-              key={source.id}
-              className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2 text-xs flex flex-col justify-between"
+              key={cite.id}
+              className="clinical-card p-5 bg-white space-y-3 hover:border-purple-300 transition-colors"
             >
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="font-mono text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
-                    {source.id}
-                  </span>
-                  <span className="text-[11px] text-slate-400">
-                    {source.source} ({source.version})
-                  </span>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-purple-700">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>{cite.source}</span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-slate-500 font-normal">{cite.version}</span>
                 </div>
-                <h4 className="font-semibold text-slate-100 text-sm">
-                  {source.title}
-                </h4>
-                <span className="text-[11px] text-sky-300/80 block mt-0.5">
-                  Section: {source.section}
+                <span className="font-mono text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                  {cite.id}
                 </span>
-                <p className="text-xs text-slate-300 mt-2 italic bg-slate-950/50 p-2.5 rounded border border-slate-800/80">
-                  "{source.snippet}"
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-slate-900 leading-snug">
+                  {cite.title}
+                </h4>
+                <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                  Section: {cite.section}
                 </p>
               </div>
 
-              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-end text-[11px] text-slate-400">
-                <span className="flex items-center gap-1 text-sky-400 hover:underline cursor-pointer">
-                  <span>View Full Guideline</span>
-                  <ExternalLink className="w-3 h-3" />
+              <blockquote className="p-3 rounded-xl bg-slate-50 border-l-2 border-purple-500 text-xs text-slate-700 italic leading-relaxed">
+                &ldquo;{cite.snippet}&rdquo;
+              </blockquote>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                  Grounded Citation Verified
                 </span>
+                <button
+                  onClick={() => alert(`Opening citation source: ${cite.title}`)}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                >
+                  <span>View source</span>
+                  <ExternalLink className="w-3 h-3" />
+                </button>
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* AI Provenance & Reproducibility Metadata */}
-      <div className="glass-card rounded-xl p-4 border border-slate-800 text-[11px] text-slate-400 grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
-        <div className="flex items-center gap-2">
-          <Cpu className="w-3.5 h-3.5 text-sky-400" />
-          <span>{aiAnalysis.modelName}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Hash className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Prompt: {aiAnalysis.promptVersion}</span>
-        </div>
-        <div>
-          <span>Input: {truncateHash(aiAnalysis.inputHash)}</span>
-        </div>
-        <div>
-          <span>Output: {truncateHash(aiAnalysis.outputHash)}</span>
         </div>
       </div>
     </div>
